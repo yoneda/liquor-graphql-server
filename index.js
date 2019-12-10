@@ -1,6 +1,46 @@
 const express = require("express");
+const request = require("superagent");
 const { ApolloServer } = require("apollo-server-express");
 
+// APIリクエストを送信するためのエージェント
+const agentUrl = "https://the-cocktail-db.p.rapidapi.com/filter.php";
+const rapidApiHost = "the-cocktail-db.p.rapidapi.com";
+const rapidApiKey = "8f4a6e1dfdmshb86bcf026befee7p13f8c7jsn390704209ed1";
+
+const DrinkAgent = {
+  all: category =>
+    request
+      .get(agentUrl)
+      .query({
+        c: {
+          COCKTAIL: "Cocktail",
+          OTHER: "Other / Unknown",
+          COFFEE: "Coffee / Tea",
+          BEER: "Beer"
+        }[category]
+      })
+      .set("X-RapidAPI-Host", rapidApiHost)
+      .set("X-RapidAPI-Key", rapidApiKey)
+      .then(res =>
+        res.body.drinks.map(drink => ({
+          id: parseInt(drink["idDrink"]),
+          name: drink["strDrink"],
+          url: drink["strDrinkThumb"]
+        }))
+      )
+};
+
+// デバッグ用
+/*
+const testFunc = async () => {
+  const result = await DrinkAgent.all("COCKTAIL");
+  console.log(result);
+};
+
+testFunc();
+*/
+
+// GraphQL のスキーマ定義
 const typeDefs = `
   enum DrinkCategory{
     COCKTAIL
@@ -10,7 +50,8 @@ const typeDefs = `
   }
   type Query{
     total: Int!
-    all: [Drink!]!
+    allDrinks(category: DrinkCategory): [Drink!]!
+    Drink(id: ID!): Drink!
   }
   type Drink{
     id: ID!
@@ -23,40 +64,10 @@ const typeDefs = `
   }
 `;
 
-const drinks = [
-  {
-    id: "1",
-    name: "飲み物1",
-    url: "http://google.com",
-    category: "COCKTAIL",
-    ingredients: "材料材料",
-    instructions: "手順手順",
-    date: "2019/10/10 10:00:00"
-  },
-  {
-    id: "2",
-    name: "飲み物2",
-    url: "http://google.com",
-    category: "COCKTAIL",
-    ingredients: "材料材料",
-    instructions: "手順手順",
-    date: "2019/10/10 10:00:00"
-  },
-  {
-    id: "3",
-    name: "飲み物3",
-    url: "http://google.com",
-    category: "BEER",
-    ingredients: "材料材料",
-    instructions: "手順手順",
-    date: "2019/10/10 10:00:00"
-  }
-];
-
+// GraphQL のリゾルバ
 const resolvers = {
   Query: {
-    total: () => drinks.length,
-    all: () => drinks
+    allDrinks: (parent, { category }) => DrinkAgent.all(category)
   }
 };
 
@@ -66,6 +77,6 @@ const app = express();
 
 server.applyMiddleware({ app });
 
-app.listen({ port: 3000 }, () =>
-  console.log(`server ready at http://localhost:3000${server.graphqlPath}`)
+app.listen({ port: 4000 }, () =>
+  console.log(`server ready at http://localhost:4000${server.graphqlPath}`)
 );
