@@ -3,31 +3,64 @@ const request = require("superagent");
 const { ApolloServer } = require("apollo-server-express");
 
 // APIリクエストを送信するためのエージェント
-const agentUrl = "https://the-cocktail-db.p.rapidapi.com/filter.php";
+const agentUrl = "https://the-cocktail-db.p.rapidapi.com";
 const rapidApiHost = "the-cocktail-db.p.rapidapi.com";
 const rapidApiKey = "8f4a6e1dfdmshb86bcf026befee7p13f8c7jsn390704209ed1";
+
+const categoryToLoose = category =>
+  ({
+    COCKTAIL: "Cocktail",
+    OTHER: "Other/Unknown",
+    COFFEE: "Coffee / Tea",
+    BEER: "Beer"
+  }[category]);
+
+const categoryToStrict = category => ({
+  "Cocktail": "COCKTAIL",
+  "Other/Unknown": "OTHER",
+  "Coffee / Tea": "COFFEE",
+  "Beer": "BEER"
+}[category]);
 
 const DrinkAgent = {
   all: category =>
     request
-      .get(agentUrl)
+      .get(`${agentUrl}/filter.php`)
       .query({
-        c: {
-          COCKTAIL: "Cocktail",
-          OTHER: "Other / Unknown",
-          COFFEE: "Coffee / Tea",
-          BEER: "Beer"
-        }[category]
+        c: categoryToLoose(category)
       })
       .set("X-RapidAPI-Host", rapidApiHost)
       .set("X-RapidAPI-Key", rapidApiKey)
       .then(res =>
-        res.body.drinks.map(drink => ({
+        res.body.drinks.map(drink => {
+          console.log(drink["strCategory"]);
+          const obj = {
+            id: parseInt(drink["idDrink"]),
+            name: drink["strDrink"],
+            url: drink["strDrinkThumb"],
+          };
+          return obj;
+        })
+      ),
+  oneById: id => 
+    request
+      .get(`${agentUrl}/lookup.php`)
+      .query({
+        i: `${id}`
+      })
+      .set("X-RapidAPI-Host", rapidApiHost)
+      .set("X-RapidAPI-Key", rapidApiKey)
+      .then(res=>{
+        console.log(res.body);
+        const drink = res.body.drinks[0];
+        return {
           id: parseInt(drink["idDrink"]),
           name: drink["strDrink"],
-          url: drink["strDrinkThumb"]
-        }))
-      )
+          url: drink["strDrinkThumb"],
+          category: categoryToStrict(drink["strCategory"]),
+          instructions: drink["strInstructions"],
+        }
+      }),
 };
 
 // デバッグ用
@@ -67,8 +100,9 @@ const typeDefs = `
 // GraphQL のリゾルバ
 const resolvers = {
   Query: {
-    allDrinks: (parent, { category }) => DrinkAgent.all(category)
-  }
+    allDrinks: (parent, { category }) => DrinkAgent.all(category),
+    Drink: (parent, { id }) => DrinkAgent.oneById(id)
+  },
 };
 
 const server = new ApolloServer({ typeDefs, resolvers });
