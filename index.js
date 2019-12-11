@@ -1,11 +1,13 @@
 const express = require("express");
 const request = require("superagent");
 const { ApolloServer } = require("apollo-server-express");
+const dotenv = require("dotenv");
+dotenv.config();
 
 // APIリクエストを送信するためのエージェント
-const agentUrl = "https://the-cocktail-db.p.rapidapi.com";
-const rapidApiHost = "the-cocktail-db.p.rapidapi.com";
-const rapidApiKey = "8f4a6e1dfdmshb86bcf026befee7p13f8c7jsn390704209ed1";
+const agentUrl = process.env.RAPIDAPI_URL;
+const rapidApiHost = process.env.RAPIDAPI_HOST;
+const rapidApiKey = process.env.RAPIDAPI_KEY;
 
 const categoryToLoose = category =>
   ({
