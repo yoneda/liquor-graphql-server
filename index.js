@@ -36,7 +36,6 @@ const DrinkAgent = {
       .set("X-RapidAPI-Key", rapidApiKey)
       .then(res =>
         res.body.drinks.map(drink => {
-          console.log(drink["strCategory"]);
           const obj = {
             id: parseInt(drink["idDrink"]),
             name: drink["strDrink"],
@@ -104,4 +103,7 @@ const app = express();
 
 server.applyMiddleware({ app });
 
-app.listen(process.env.PORT || 4000, () => console.log("start!"));
+app.listen({ port: process.env.PORT || 4000 }, () =>{
+  const port = process.env.PORT || 4000;
+  console.log(`🚀 Server ready at http://localhost:${port}${server.graphqlPath}`)
+});
