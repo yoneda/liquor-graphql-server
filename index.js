@@ -17,12 +17,13 @@ const categoryToLoose = category =>
     BEER: "Beer"
   }[category]);
 
-const categoryToStrict = category => ({
-  "Cocktail": "COCKTAIL",
-  "Other/Unknown": "OTHER",
-  "Coffee / Tea": "COFFEE",
-  "Beer": "BEER"
-}[category]);
+const categoryToStrict = category =>
+  ({
+    Cocktail: "COCKTAIL",
+    "Other/Unknown": "OTHER",
+    "Coffee / Tea": "COFFEE",
+    Beer: "BEER"
+  }[category]);
 
 const DrinkAgent = {
   all: category =>
@@ -39,12 +40,12 @@ const DrinkAgent = {
           const obj = {
             id: parseInt(drink["idDrink"]),
             name: drink["strDrink"],
-            url: drink["strDrinkThumb"],
+            url: drink["strDrinkThumb"]
           };
           return obj;
         })
       ),
-  oneById: id => 
+  oneById: id =>
     request
       .get(`${agentUrl}/lookup.php`)
       .query({
@@ -52,7 +53,7 @@ const DrinkAgent = {
       })
       .set("X-RapidAPI-Host", rapidApiHost)
       .set("X-RapidAPI-Key", rapidApiKey)
-      .then(res=>{
+      .then(res => {
         console.log(res.body);
         const drink = res.body.drinks[0];
         return {
@@ -60,9 +61,9 @@ const DrinkAgent = {
           name: drink["strDrink"],
           url: drink["strDrinkThumb"],
           category: categoryToStrict(drink["strCategory"]),
-          instructions: drink["strInstructions"],
-        }
-      }),
+          instructions: drink["strInstructions"]
+        };
+      })
 };
 
 // GraphQL のスキーマ定義
@@ -94,7 +95,7 @@ const resolvers = {
   Query: {
     allDrinks: (parent, { category }) => DrinkAgent.all(category),
     Drink: (parent, { id }) => DrinkAgent.oneById(id)
-  },
+  }
 };
 
 const server = new ApolloServer({ typeDefs, resolvers });
@@ -103,6 +104,4 @@ const app = express();
 
 server.applyMiddleware({ app });
 
-app.listen({ port: process.env.PORT || 4000 }).then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
-});
+app.listen(process.env.PORT || 4000, () => console.log("start!"));
