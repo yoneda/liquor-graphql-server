@@ -63,16 +63,6 @@ const DrinkAgent = {
       }),
 };
 
-// デバッグ用
-/*
-const testFunc = async () => {
-  const result = await DrinkAgent.all("COCKTAIL");
-  console.log(result);
-};
-
-testFunc();
-*/
-
 // GraphQL のスキーマ定義
 const typeDefs = `
   enum DrinkCategory{
