@@ -77,6 +77,7 @@ const typeDefs = `
     total: Int!
     allDrinks(category: DrinkCategory): [Drink!]!
     Drink(id: ID!): Drink!
+    walkup: String!
   }
   type Drink{
     id: ID!
@@ -93,7 +94,8 @@ const typeDefs = `
 const resolvers = {
   Query: {
     allDrinks: (parent, { category }) => DrinkAgent.all(category),
-    Drink: (parent, { id }) => DrinkAgent.oneById(id)
+    Drink: (parent, { id }) => DrinkAgent.oneById(id),
+    walkup: () => "hello",
   }
 };
 
